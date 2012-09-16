@@ -199,17 +199,17 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		List<JavaFileObject> javaFileObjects =
 			new ArrayList<JavaFileObject>();
 
+		if (_verbose) {
+			System.err.println(
+				"[PHIDIAS] List available sources for \n\t{location=" +
+					location + ", packageName=" + packageName + ", kinds=" +
+						kinds + ", recurse=" + recurse + "}");
+		}
+
 		if ((location == StandardLocation.CLASS_PATH) &&
 			!packageName.startsWith(JAVA_PACKAGE)) {
 
 			int options = recurse ? BundleWiring.LISTRESOURCES_RECURSE : 0;
-
-			if (_verbose) {
-				System.err.println(
-					"[PHIDIAS] List available sources for \n\t{location=" +
-						location + ", packageName=" + packageName + ", kinds=" +
-							kinds + ", recurse=" + recurse + "}");
-			}
 
 			packageName = packageName.replace('.', '/');
 
@@ -224,6 +224,10 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 
 		for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
 				location, packageName, kinds, recurse)) {
+
+			if (_verbose) {
+				System.err.println("\t" + javaFileObject);
+			}
 
 			javaFileObjects.add(javaFileObject);
 		}
