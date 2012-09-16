@@ -6,10 +6,6 @@ Provide OSGi aware runtime compilation support to javax.tools
 Here is a simple example executing compilation:
 
 ```java
-File sourceDri = .. // a directory containing the source code
-
-assert (sourceDri != null) && (sourceDri.exists());
-
 Bundle bundle = .. // the bundle executing the compile task
 
 assert (bundle != null);
