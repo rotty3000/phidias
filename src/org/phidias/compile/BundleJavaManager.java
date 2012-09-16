@@ -51,7 +51,7 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		if (_verbose) {
 			System.err.println(
 				"[PHIDIAS] Initializing compilation in OSGi for bundle " +
-					bundle.getSymbolicName() + "-" + bundle.getVersion());
+					_bundle.getSymbolicName() + "-" + _bundle.getVersion());
 		}
 
 		_standardJavaFileManager = standardJavaFileManager;
