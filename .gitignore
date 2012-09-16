@@ -1,6 +1,6 @@
 *.class
-
-# Package Files #
+*.ear
 *.jar
 *.war
-*.ear
+
+/.settings

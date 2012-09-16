@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="org.phidias.compile" basedir="." default="jar">
+	<property name="project.dir" value="." />
+
+	<import file="build-common.xml" />
+
+	<target name="clean">
+		<delete dir="${project.dir}/classes" />
+		<delete dir="${project.dir}/test-classes" />
+		<delete dir="${project.dir}/dist" />
+	</target>
+
+	<target name="compile">
+		<mkdir dir="classes/META-INF" />
+
+		<javac
+			classpathref="lib.classpath"
+			compiler="${javac.compiler}"
+			debug="${javac.debug}"
+			deprecation="${javac.deprecation}"
+			destdir="classes"
+			encoding="${javac.encoding}"
+			includeAntRuntime="false"
+			nowarn="${javac.nowarn}"
+			srcdir="src"
+		/>
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="dist" />
+
+		<bnd
+			eclipse="false"
+			exceptions="true"
+			failok="false"
+			inherit="true"
+			output="dist"
+			sourcepath="."
+		>
+			<bndfiles path="bnd.bnd" />
+			<classpath>
+				<pathelement location="classes" />
+			</classpath>
+		</bnd>
+
+		<move file="dist/${ant.project.name}.jar" tofile="dist/${ant.project.name}-${Bundle-Version}.jar" />
+	</target>
+
+</project>
