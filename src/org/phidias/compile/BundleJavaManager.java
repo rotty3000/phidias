@@ -243,6 +243,13 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			}
 		}
 
+		// This ensures that if a standard classpath location has been provided
+		// we include it. It allows the framework to compile against libraries
+		// not deployed as OSGi bundles. This is also needed in cases where the
+		// system.bundle exports extra packages via the property
+		// 'org.osgi.framework.system.packages.extra' or via bundle fragments
+		// which only supplement its 'Export-Package' directive.
+
 		if (javaFileObjects.isEmpty()) {
 			for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
 					location, packageName, kinds, recurse)) {
