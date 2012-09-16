@@ -21,7 +21,7 @@ try {
 	//http://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javac.html#options
 
 	options.add("-proc:none"); // don't process annotations (typical for jsps)
-	options.add("-verbose"); // BundleJavaManager adds to the default verbose output
+	options.add("-verbose"); // Phidias adds to the default verbose output
 
 	JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
 
@@ -34,7 +34,6 @@ try {
 		javaCompiler.getStandardFileManager(diagnostics, null, null);
 
 	// Were using source in string format (possibly generated dynamically)
-	// pass it an array StringJavaFileObject (obviously there can be many)
 	JavaFileObject[] sourceFiles = {
 		new StringJavaFileObject(javaSourceName, javaSource)};
 
