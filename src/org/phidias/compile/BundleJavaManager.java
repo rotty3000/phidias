@@ -219,7 +219,7 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		List<JavaFileObject> javaFileObjects =
 			new ArrayList<JavaFileObject>();
 
-		if (_verbose) {
+		if (_verbose && (location == StandardLocation.CLASS_PATH)) {
 			System.err.println(
 				"[PHIDIAS] List available sources for {location=" +
 					location + ", packageName=" + packageName + ", kinds=" +
@@ -247,7 +247,7 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
 					location, packageName, kinds, recurse)) {
 
-				if (_verbose) {
+				if (_verbose && (location == StandardLocation.CLASS_PATH)) {
 					System.err.println("\t" + javaFileObject);
 				}
 
