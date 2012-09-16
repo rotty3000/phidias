@@ -25,11 +25,22 @@ import org.osgi.framework.wiring.BundleWiring;
 
 public class BundleJavaManager implements Constants, StandardJavaFileManager {
 
+
 	public BundleJavaManager(
 			Bundle bundle, StandardJavaFileManager standardJavaFileManager)
 		throws IOException {
 
+		this(bundle, standardJavaFileManager, null);
+	}
+
+	public BundleJavaManager(
+			Bundle bundle, StandardJavaFileManager standardJavaFileManager,
+			List<String> options)
+		throws IOException {
+
 		_bundle = bundle;
+
+		setOptions(options);
 
 		if (_verbose) {
 			System.err.println(
@@ -241,18 +252,6 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		_standardJavaFileManager.setLocation(location, path);
 	}
 
-	public void setOptions(List<String> options) {
-		if (options == null) {
-			return;
-		}
-
-		_options.addAll(options);
-
-		if (_options.contains(OPT_VERBOSE)) {
-			_verbose = true;
-		}
-	}
-
 	private String getClassNameFromPath(URL resource, String packageName) {
 		String className = resource.getPath();
 
@@ -300,6 +299,18 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			catch (URISyntaxException e) {
 				// Can't really happen
 			}
+		}
+	}
+
+	private void setOptions(List<String> options) {
+		if (options == null) {
+			return;
+		}
+
+		_options.addAll(options);
+
+		if (_options.contains(OPT_VERBOSE)) {
+			_verbose = true;
 		}
 	}
 
