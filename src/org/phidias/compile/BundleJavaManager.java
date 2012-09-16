@@ -30,6 +30,13 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		throws IOException {
 
 		_bundle = bundle;
+
+		if (_verbose) {
+			System.err.println(
+				"[PHIDIAS] Initializing compilation in OSGi for bundle " +
+					bundle.getSymbolicName() + "-" + bundle.getVersion());
+		}
+
 		_standardJavaFileManager = standardJavaFileManager;
 
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
@@ -42,11 +49,25 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 
 		List<BundleWire> providedWires = bundleWiring.getRequiredWires(null);
 
+		if (_verbose) {
+			System.err.println(
+				"[PHIDIAS] Dependent BundleWirings included in this " +
+					"BundleJavaManager context: ");
+		}
+
 		for (BundleWire bundleWire : providedWires) {
 			BundleWiring providerWiring = bundleWire.getProviderWiring();
 
 			if (_bundleWirings.contains(providerWiring)) {
 				continue;
+			}
+
+			if (_verbose) {
+				Bundle curBundle = providerWiring.getBundle();
+
+				System.err.println(
+					"\t" + curBundle.getSymbolicName() + "-" +
+						curBundle.getVersion());
 			}
 
 			_bundleWirings.add(providerWiring);
@@ -150,6 +171,12 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			BundleJavaFileObject bundleJavaFileObject =
 				(BundleJavaFileObject)file;
 
+			if (_verbose) {
+				System.err.println(
+					"[PHIDIAS] Infering binary name from " +
+						bundleJavaFileObject);
+			}
+
 			return bundleJavaFileObject.inferBinaryName();
 		}
 
@@ -177,9 +204,14 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 
 			int options = recurse ? BundleWiring.LISTRESOURCES_RECURSE : 0;
 
-			packageName = packageName.replace('.', '/');
+			if (_verbose) {
+				System.err.println(
+					"[PHIDIAS] List available sources for \n\t{location=" +
+						location + ", packageName=" + packageName + ", kinds=" +
+							kinds + ", recurse=" + recurse + "}");
+			}
 
-			System.out.println(packageName);
+			packageName = packageName.replace('.', '/');
 
 			for (Kind kind : kinds) {
 				for (BundleWiring bundleWiring : _bundleWirings) {
@@ -203,6 +235,18 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		throws IOException {
 
 		_standardJavaFileManager.setLocation(location, path);
+	}
+
+	public void setOptions(List<String> options) {
+		if (options == null) {
+			return;
+		}
+
+		_options.addAll(options);
+
+		if (_options.contains(OPT_VERBOSE)) {
+			_verbose = true;
+		}
 	}
 
 	private String getClassNameFromPath(URL resource, String packageName) {
@@ -237,19 +281,20 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		for (String resourceName : resources) {
 			URL resource = provider.getResource(resourceName);
 
-			if (resource != null) {
-				String className = getClassNameFromPath(
-					resource, packageName);
+			String className = getClassNameFromPath(resource, packageName);
 
-				try {
-					JavaFileObject javaFileObject = new BundleJavaFileObject(
-						resource.toURI(), className);
+			try {
+				JavaFileObject javaFileObject = new BundleJavaFileObject(
+					resource.toURI(), className);
 
-					javaFileObjects.add(javaFileObject);
+				if (_verbose) {
+					System.err.println("\t" + javaFileObject);
 				}
-				catch (URISyntaxException e) {
-					// Can't really happen
-				}
+
+				javaFileObjects.add(javaFileObject);
+			}
+			catch (URISyntaxException e) {
+				// Can't really happen
 			}
 		}
 	}
@@ -257,6 +302,8 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 	private Bundle _bundle;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
+	private boolean _verbose = false;
+	private List<String> _options = new ArrayList<String>();
 	private StandardJavaFileManager _standardJavaFileManager;
 
 }

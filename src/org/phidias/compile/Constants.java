@@ -9,7 +9,7 @@ public interface Constants {
 
 	public static final String OPT_PROC_NONE = "-proc:none";
 
-	public static final String OPT_TRACE = "-trace";
+	public static final String OPT_VERBOSE = "-verbose";
 
 	public static final String PERIOD = ".";
 
