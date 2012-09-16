@@ -233,14 +233,16 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			}
 		}
 
-		for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
-				location, packageName, kinds, recurse)) {
+		if (javaFileObjects.isEmpty()) {
+			for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
+					location, packageName, kinds, recurse)) {
 
-			if (_verbose) {
-				System.err.println("\t" + javaFileObject);
+				if (_verbose) {
+					System.err.println("\t" + javaFileObject);
+				}
+
+				javaFileObjects.add(javaFileObject);
 			}
-
-			javaFileObjects.add(javaFileObject);
 		}
 
 		return javaFileObjects;
