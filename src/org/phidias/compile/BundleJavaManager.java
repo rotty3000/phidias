@@ -8,8 +8,10 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.tools.FileObject;
@@ -19,6 +21,10 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -57,6 +63,9 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		_bundleWirings = new ArrayList<BundleWiring>();
 
 		_bundleWirings.add(bundleWiring);
+
+		_packageRequirements = bundleWiring.getRequirements(
+			BundleRevision.PACKAGE_NAMESPACE);
 
 		List<BundleWire> providedWires = bundleWiring.getRequiredWires(null);
 
@@ -218,7 +227,8 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		}
 
 		if ((location == StandardLocation.CLASS_PATH) &&
-			!packageName.startsWith(JAVA_PACKAGE)) {
+			(!packageName.startsWith(JAVA_PACKAGE) ||
+			 isBundleRequirement(packageName))) {
 
 			int options = recurse ? BundleWiring.LISTRESOURCES_RECURSE : 0;
 
@@ -267,6 +277,29 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		}
 
 		return className;
+	}
+
+	private boolean isBundleRequirement(String packageName) {
+		Map<String,String> attributes = new HashMap<String,String>();
+
+		attributes.put(BundleRevision.PACKAGE_NAMESPACE, packageName);
+
+		for (BundleRequirement packageRequirement : _packageRequirements) {
+			String filterSpec = packageRequirement.getDirectives().get(FILTER);
+
+			try {
+				if ((filterSpec != null) &&
+					FrameworkUtil.createFilter(filterSpec).matches(attributes)) {
+
+					return true;
+				}
+			}
+			catch (InvalidSyntaxException e) {
+				// Won't happen
+			}
+		}
+
+		return false;
 	}
 
 	private void list(
@@ -319,8 +352,9 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 	private Bundle _bundle;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
-	private boolean _verbose = false;
 	private List<String> _options = new ArrayList<String>();
+	private List<BundleRequirement> _packageRequirements;
 	private StandardJavaFileManager _standardJavaFileManager;
+	private boolean _verbose = false;
 
 }

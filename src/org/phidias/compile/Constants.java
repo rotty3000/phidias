@@ -5,6 +5,8 @@ package org.phidias.compile;
  */
 public interface Constants {
 
+	public static final String FILTER = "filter";
+
 	public static final String JAVA_PACKAGE = "java.";
 
 	public static final String OPT_PROC_NONE = "-proc:none";
