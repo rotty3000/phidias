@@ -201,7 +201,7 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 
 		if (_verbose) {
 			System.err.println(
-				"[PHIDIAS] List available sources for \n\t{location=" +
+				"[PHIDIAS] List available sources for {location=" +
 					location + ", packageName=" + packageName + ", kinds=" +
 						kinds + ", recurse=" + recurse + "}");
 		}
