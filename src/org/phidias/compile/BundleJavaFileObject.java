@@ -12,14 +12,14 @@ import javax.tools.SimpleJavaFileObject;
  */
 public class BundleJavaFileObject extends SimpleJavaFileObject {
 
-	public BundleJavaFileObject(URI uri, String name) {
+	public BundleJavaFileObject(URI uri, String className) {
 		super(uri, Kind.CLASS);
 
-		_name = name;
+		_className = className;
 	}
 
 	public String inferBinaryName() {
-		return _name;
+		return _className;
 	}
 
 	@Override
@@ -27,6 +27,11 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 		return toUri().toURL().openStream();
 	}
 
-	private String _name;
+	@Override
+	public String toString() {
+		return _className.concat(": ").concat(super.toString());
+	}
+
+	private String _className;
 
 }
