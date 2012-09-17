@@ -3,6 +3,8 @@ phidias
 
 Provide OSGi aware runtime compilation support to javax.tools
 
+LGPL License![LGPL License](https://github.com/rotty3000/phidias/blob/master/LICENSE.md)
+
 Here is a simple example executing compilation:
 
 ```java
