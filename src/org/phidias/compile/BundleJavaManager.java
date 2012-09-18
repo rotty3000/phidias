@@ -14,7 +14,6 @@
 
 package org.phidias.compile;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.net.URISyntaxException;
@@ -23,15 +22,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
 import org.osgi.framework.Bundle;
@@ -42,21 +40,23 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
-
-public class BundleJavaManager implements Constants, StandardJavaFileManager {
-
+public class BundleJavaManager
+	extends ForwardingJavaFileManager<JavaFileManager>
+	implements Constants {
 
 	public BundleJavaManager(
-			Bundle bundle, StandardJavaFileManager standardJavaFileManager)
+			Bundle bundle, JavaFileManager javaFileManager)
 		throws IOException {
 
-		this(bundle, standardJavaFileManager, null);
+		this(bundle, javaFileManager, null);
 	}
 
 	public BundleJavaManager(
-			Bundle bundle, StandardJavaFileManager standardJavaFileManager,
+			Bundle bundle, JavaFileManager javaFileManager,
 			List<String> options)
 		throws IOException {
+
+		super(javaFileManager);
 
 		_bundle = bundle;
 
@@ -68,9 +68,10 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 					_bundle.getSymbolicName() + "-" + _bundle.getVersion());
 		}
 
-		_standardJavaFileManager = standardJavaFileManager;
+		_javaFileManager = javaFileManager;
 
-		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
+		BundleWiring bundleWiring = (BundleWiring)_bundle.adapt(
+			BundleWiring.class);
 
 		_classLoader = bundleWiring.getClassLoader();
 
@@ -108,96 +109,20 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		}
 	}
 
-	public void close() throws IOException {
-		_standardJavaFileManager.close();
-	}
-
-	public void flush() throws IOException {
-		_standardJavaFileManager.flush();
-	}
-
 	public ClassLoader getClassLoader() {
 		return _classLoader;
 	}
 
+	@Override
 	public ClassLoader getClassLoader(Location location) {
 		if (location != StandardLocation.CLASS_PATH) {
-			return _standardJavaFileManager.getClassLoader(location);
+			return _javaFileManager.getClassLoader(location);
 		}
 
 		return getClassLoader();
 	}
 
-	public FileObject getFileForInput(
-			Location location, String packageName, String relativeName)
-		throws IOException {
-
-		return _standardJavaFileManager.getFileForInput(
-			location, packageName, relativeName);
-	}
-
-	public FileObject getFileForOutput(
-			Location location, String packageName, String relativeName,
-			FileObject sibling)
-		throws IOException {
-
-		return _standardJavaFileManager.getFileForOutput(
-			location, packageName, relativeName, sibling);
-	}
-
-	public JavaFileObject getJavaFileForInput(
-		Location location, String className, Kind kind) throws IOException {
-
-		return _standardJavaFileManager.getJavaFileForInput(
-			location, className, kind);
-	}
-
-	public JavaFileObject getJavaFileForOutput(
-			Location location, String className, Kind kind,
-			FileObject sibling)
-		throws IOException {
-
-		return _standardJavaFileManager.getJavaFileForOutput(
-			location, className, kind, sibling);
-	}
-
-	public Iterable<? extends JavaFileObject> getJavaFileObjects(
-		File... files) {
-
-		return _standardJavaFileManager.getJavaFileObjects(files);
-	}
-
-	public Iterable<? extends JavaFileObject> getJavaFileObjects(
-		String... names) {
-
-		return _standardJavaFileManager.getJavaFileObjects(names);
-	}
-
-	public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(
-		Iterable<? extends File> files) {
-
-		return _standardJavaFileManager.getJavaFileObjectsFromFiles(files);
-	}
-
-	public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(
-		Iterable<String> names) {
-
-		return _standardJavaFileManager.getJavaFileObjectsFromStrings(
-			names);
-	}
-
-	public Iterable<? extends File> getLocation(Location location) {
-		return _standardJavaFileManager.getLocation(location);
-	}
-
-	public boolean handleOption(String current, Iterator<String> remaining) {
-		return _standardJavaFileManager.handleOption(current, remaining);
-	}
-
-	public boolean hasLocation(Location location) {
-		return _standardJavaFileManager.hasLocation(location);
-	}
-
+	@Override
 	public String inferBinaryName(Location location, JavaFileObject file) {
 		if ((location == StandardLocation.CLASS_PATH) &&
 			(file instanceof BundleJavaFileObject)) {
@@ -214,17 +139,10 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 			return bundleJavaFileObject.inferBinaryName();
 		}
 
-		return _standardJavaFileManager.inferBinaryName(location, file);
+		return _javaFileManager.inferBinaryName(location, file);
 	}
 
-	public boolean isSameFile(FileObject a, FileObject b) {
-		return _standardJavaFileManager.isSameFile(a, b);
-	}
-
-	public int isSupportedOption(String option) {
-		return _standardJavaFileManager.isSupportedOption(option);
-	}
-
+	@Override
 	public Iterable<JavaFileObject> list(
 			Location location, String packageName, Set<Kind> kinds,
 			boolean recurse)
@@ -265,7 +183,7 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		// which only supplement its 'Export-Package' directive.
 
 		if (javaFileObjects.isEmpty()) {
-			for (JavaFileObject javaFileObject : _standardJavaFileManager.list(
+			for (JavaFileObject javaFileObject : _javaFileManager.list(
 					location, packageName, kinds, recurse)) {
 
 				if (_verbose && (location == StandardLocation.CLASS_PATH)) {
@@ -277,12 +195,6 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		}
 
 		return javaFileObjects;
-	}
-
-	public void setLocation(Location location, Iterable<? extends File> path)
-		throws IOException {
-
-		_standardJavaFileManager.setLocation(location, path);
 	}
 
 	private String getClassNameFromPath(URL resource, String packageName) {
@@ -306,11 +218,14 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 		attributes.put(BundleRevision.PACKAGE_NAMESPACE, packageName);
 
 		for (BundleRequirement packageRequirement : _packageRequirements) {
-			String filterSpec = packageRequirement.getDirectives().get(FILTER);
+			Map<String, String> directives = packageRequirement.getDirectives();
+
+			String filterSpec = directives.get(FILTER);
 
 			try {
 				if ((filterSpec != null) &&
-					FrameworkUtil.createFilter(filterSpec).matches(attributes)) {
+					FrameworkUtil.createFilter(filterSpec).matches(
+						attributes)) {
 
 					return true;
 				}
@@ -373,9 +288,9 @@ public class BundleJavaManager implements Constants, StandardJavaFileManager {
 	private Bundle _bundle;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
+	private JavaFileManager _javaFileManager;
 	private List<String> _options = new ArrayList<String>();
 	private List<BundleRequirement> _packageRequirements;
-	private StandardJavaFileManager _standardJavaFileManager;
 	private boolean _verbose = false;
 
 }
