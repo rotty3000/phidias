@@ -39,6 +39,8 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
+import org.phidias.compile.internal.BasicResourceResolver;
+
 public class BundleJavaManager
 	extends ForwardingJavaFileManager<JavaFileManager>
 	implements Constants {
@@ -206,6 +208,10 @@ public class BundleJavaManager
 		return javaFileObjects;
 	}
 
+	public void setResourceResolver(ResourceResolver resourceResolver) {
+		_resourceResolver = resourceResolver;
+	}
+
 	private String getClassNameFromPath(URL resource, String packageName) {
 		String className = resource.getPath();
 
@@ -219,6 +225,16 @@ public class BundleJavaManager
 		}
 
 		return className;
+	}
+
+	private ResourceResolver getResourceResolver() {
+		if (_resourceResolver != null) {
+			return _resourceResolver;
+		}
+
+		_resourceResolver = new BasicResourceResolver();
+
+		return _resourceResolver;
 	}
 
 	private boolean hasPackageRequirement(
@@ -285,18 +301,19 @@ public class BundleJavaManager
 		String packageName, Kind kind, int options,
 		BundleWiring bundleWiring, List<JavaFileObject> javaFileObjects) {
 
-		Collection<String> resources = bundleWiring.listResources(
-			packageName, STAR.concat(kind.extension),
+		ResourceResolver resourceResolver = getResourceResolver();
+
+		Collection<String> resources = resourceResolver.resolveResources(
+			bundleWiring, packageName, STAR.concat(kind.extension),
 			options);
 
 		if ((resources == null) || resources.isEmpty()) {
 			return;
 		}
 
-		Bundle provider = bundleWiring.getBundle();
-
 		for (String resourceName : resources) {
-			URL resource = provider.getResource(resourceName);
+			URL resource = resourceResolver.getResource(
+				bundleWiring, resourceName);
 
 			String className = getClassNameFromPath(resource, packageName);
 
@@ -360,6 +377,7 @@ public class BundleJavaManager
 	private JavaFileManager _javaFileManager;
 	private List<String> _options = new ArrayList<String>();
 	private List<BundleRequirement> _packageRequirements;
+	private ResourceResolver _resourceResolver;
 	private boolean _strict;
 	private BundleWiring _systemBundleWiring;
 	private List<BundleCapability> _systemCapabilities;
