@@ -23,9 +23,9 @@ import org.osgi.framework.wiring.BundleWiring;
  */
 public interface ResourceResolver {
 
-	URL getResource(BundleWiring bundleWiring, String name);
+	public URL getResource(BundleWiring bundleWiring, String name);
 
-	Collection<String> resolveResources(
+	public Collection<String> resolveResources(
 		BundleWiring bundleWiring, String path, String filePattern,
 		int options);
 
