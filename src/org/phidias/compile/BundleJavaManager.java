@@ -69,16 +69,15 @@ public class BundleJavaManager
 
 		_bundle = bundle;
 		_javaFileManager = javaFileManager;
+		_log = new TPhLog();
 
 		setOptions(options);
 
 		_strict = strict;
 
-		if (_verbose) {
-			System.err.println(
-				"[PHIDIAS] Initializing compilation in OSGi for bundle " +
-					_bundle.getSymbolicName() + "-" + _bundle.getVersion());
-		}
+		_log.log(
+			"Initializing compilation in OSGi for bundle " +
+				_bundle.getSymbolicName() + "-" + _bundle.getVersion());
 
 		_bundleWiring = (BundleWiring)_bundle.adapt(BundleWiring.class);
 
@@ -89,11 +88,9 @@ public class BundleJavaManager
 
 		List<BundleWire> providedWires = _bundleWiring.getRequiredWires(null);
 
-		if (_verbose) {
-			System.err.println(
-				"[PHIDIAS] Dependent BundleWirings included in this " +
-					"BundleJavaManager context: ");
-		}
+		_log.log(
+			"Dependent BundleWirings included in this BundleJavaManager " +
+				"context: ");
 
 		_bundleWirings = new ArrayList<BundleWiring>();
 
@@ -110,11 +107,9 @@ public class BundleJavaManager
 				_systemBundleWiring = providerWiring;
 			}
 
-			if (_verbose) {
-				System.err.println(
-					"\t" + curBundle.getSymbolicName() + "-" +
-						curBundle.getVersion());
-			}
+			_log.log(
+				"\t" + curBundle.getSymbolicName() + "-" +
+					curBundle.getVersion());
 
 			_bundleWirings.add(providerWiring);
 		}
@@ -146,11 +141,7 @@ public class BundleJavaManager
 			BundleJavaFileObject bundleJavaFileObject =
 				(BundleJavaFileObject)file;
 
-			if (_verbose) {
-				System.err.println(
-					"[PHIDIAS] Infering binary name from " +
-						bundleJavaFileObject);
-			}
+			_log.log("Infering binary name from " + bundleJavaFileObject);
 
 			return bundleJavaFileObject.inferBinaryName();
 		}
@@ -164,14 +155,13 @@ public class BundleJavaManager
 			boolean recurse)
 		throws IOException {
 
-		List<JavaFileObject> javaFileObjects =
-			new ArrayList<JavaFileObject>();
+		List<JavaFileObject> javaFileObjects = new ArrayList<JavaFileObject>();
 
-		if (_verbose && (location == StandardLocation.CLASS_PATH)) {
-			System.err.println(
-				"[PHIDIAS] List available sources for {location=" +
-					location + ", packageName=" + packageName + ", kinds=" +
-						kinds + ", recurse=" + recurse + "}");
+		if (location == StandardLocation.CLASS_PATH) {
+			_log.log(
+				"List available sources for {location=" + location +
+					", packageName=" + packageName + ", kinds=" + kinds +
+						", recurse=" + recurse + "}");
 		}
 
 		String packagePath = packageName.replace('.', '/');
@@ -183,12 +173,13 @@ public class BundleJavaManager
 				packageName, kinds, recurse, packagePath, javaFileObjects);
 		}
 
-		// This ensures that if a standard classpath location has been provided
-		// we include it. It allows the framework to compile against libraries
-		// not deployed as OSGi bundles. This is also needed in cases where the
-		// system.bundle exports extra packages via the property
-		// 'org.osgi.framework.system.packages.extra' or via bundle fragments
-		// which only supplement its 'Export-Package' directive.
+		// When not in strict mode, the following ensures that if a standard
+		// classpath location has been provided we include it. It allows the
+		// framework to compile against libraries not deployed as OSGi bundles.
+		// This is also needed in cases where the system.bundle exports extra
+		// packages via the property 'org.osgi.framework.system.packages.extra'
+		// or via extension bundles (fragments) which only supplement its
+		// 'Export-Package' directive.
 
 		if (packageName.startsWith(JAVA_PACKAGE) ||
 			(location != StandardLocation.CLASS_PATH) ||
@@ -197,8 +188,8 @@ public class BundleJavaManager
 			for (JavaFileObject javaFileObject : _javaFileManager.list(
 					location, packagePath, kinds, recurse)) {
 
-				if (_verbose && (location == StandardLocation.CLASS_PATH)) {
-					System.err.println("\t" + javaFileObject);
+				if (location == StandardLocation.CLASS_PATH) {
+					_log.log("\t" + javaFileObject);
 				}
 
 				javaFileObjects.add(javaFileObject);
@@ -321,9 +312,7 @@ public class BundleJavaManager
 				JavaFileObject javaFileObject = new BundleJavaFileObject(
 					resource.toURI(), className);
 
-				if (_verbose) {
-					System.err.println("\t" + javaFileObject);
-				}
+				_log.log("\t" + javaFileObject);
 
 				javaFileObjects.add(javaFileObject);
 			}
@@ -366,7 +355,7 @@ public class BundleJavaManager
 		_options.addAll(options);
 
 		if (_options.contains(OPT_VERBOSE)) {
-			_verbose = true;
+			_log.out = System.err;
 		}
 	}
 
@@ -375,12 +364,12 @@ public class BundleJavaManager
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
 	private JavaFileManager _javaFileManager;
+	private TPhLog _log;
 	private List<String> _options = new ArrayList<String>();
 	private List<BundleRequirement> _packageRequirements;
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
 	private BundleWiring _systemBundleWiring;
 	private List<BundleCapability> _systemCapabilities;
-	private boolean _verbose = false;
 
 }
