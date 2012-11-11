@@ -42,6 +42,7 @@ try {
 	optional: {
 		// This is only needed if you want to compile against
 		// libs/classes outside of (a.k.a. not installed in) the framework
+		// including resources provided (as extensions) by the system.bundle
 
 		List<File> classPath = .. // get some paths
 
@@ -50,15 +51,44 @@ try {
 	}
 
 	// the OSGi aware file manager
-	JavaFileManager javaFileManager = new BundleJavaManager(
+	BundleJavaManager bundleFileManager = new BundleJavaManager(
 		bundle, standardFileManager, options);
+
+	optional: {
+		// *** New since 0.1.7 ***
+		// A new, optional, ResourceResolver API
+
+		// This is optional as a default implementation is automatically
+		// provided with using the exact logic below.
+
+		ResourceResolver resourceResolver = new ResourceResolver() {
+			public URL getResource(BundleWiring bundleWiring, String name) {
+				return bundleWiring.getBundle().getResource(name);
+			}
+
+			public Collection<String> resolveResources(
+				BundleWiring bundleWiring, String path, String filePattern,
+				int options) {
+
+				// Use whatever magic you like here to provide additional
+				// resolution, such as overcoming the fact that the
+				// system.bundle won't return resources from the parent
+				// classloader, even when those are exported by framework
+				// extension bundles
+
+				return bundleWiring.listResources(path, filePattern, options);
+			}
+		};
+
+		bundleFileManager.setResourceResolver(resourceResolver);
+	}
 
 	// get the compilation task
 	CompilationTask compilationTask = javaCompiler.getTask(
-		null, javaFileManager, diagnostics, options, null,
+		null, bundleFileManager, diagnostics, options, null,
 		Arrays.asList(sourceFiles));
 
-	javaFileManager.close();
+	bundleFileManager.close();
 
 	// perform the actual compilation
 	if (compilationTask.call()) {
