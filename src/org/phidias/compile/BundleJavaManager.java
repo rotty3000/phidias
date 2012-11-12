@@ -14,7 +14,8 @@ package org.phidias.compile;
 
 import java.io.IOException;
 
-import java.net.URISyntaxException;
+import java.net.JarURLConnection;
+import java.net.URI;
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -206,6 +207,12 @@ public class BundleJavaManager
 	private String getClassNameFromPath(URL resource, String packageName) {
 		String className = resource.getPath();
 
+		if (resource.getProtocol().equals("jar")) {
+			int pos = className.indexOf("!");
+
+			className = className.substring(pos + 1);
+		}
+
 		int x = className.indexOf(packageName);
 		int y = className.indexOf('.');
 
@@ -216,6 +223,41 @@ public class BundleJavaManager
 		}
 
 		return className;
+	}
+
+	private JavaFileObject getJavaFileObject(
+		URL resourceURL, String packagePath) {
+
+		String protocol = resourceURL.getProtocol();
+
+		String className = getClassNameFromPath(resourceURL, packagePath);
+
+		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
+			try {
+				return new BundleJavaFileObject(
+					resourceURL.toURI(), className);
+			}
+			catch (Exception e) {
+				_log.log(e);
+			}
+		}
+		else if (protocol.equals("jar")) {
+			try {
+				JarURLConnection jarUrlConnection =
+					(JarURLConnection)resourceURL.openConnection();
+
+				URI uri = jarUrlConnection.getJarFileURL().toURI();
+				String entryName = jarUrlConnection.getEntryName();
+
+				return new JarJavaFileObject(
+					uri, className, resourceURL, entryName);
+			}
+			catch (Exception e) {
+				_log.log(e);
+			}
+		}
+
+		return null;
 	}
 
 	private ResourceResolver getResourceResolver() {
@@ -289,13 +331,13 @@ public class BundleJavaManager
 	}
 
 	private void list(
-		String packageName, Kind kind, int options,
+		String packagePath, Kind kind, int options,
 		BundleWiring bundleWiring, List<JavaFileObject> javaFileObjects) {
 
 		ResourceResolver resourceResolver = getResourceResolver();
 
 		Collection<String> resources = resourceResolver.resolveResources(
-			bundleWiring, packageName, STAR.concat(kind.extension),
+			bundleWiring, packagePath, STAR.concat(kind.extension),
 			options);
 
 		if ((resources == null) || resources.isEmpty()) {
@@ -303,22 +345,23 @@ public class BundleJavaManager
 		}
 
 		for (String resourceName : resources) {
-			URL resource = resourceResolver.getResource(
+			URL resourceURL = resourceResolver.getResource(
 				bundleWiring, resourceName);
 
-			String className = getClassNameFromPath(resource, packageName);
+			JavaFileObject javaFileObject = getJavaFileObject(
+				resourceURL, packagePath);
 
-			try {
-				JavaFileObject javaFileObject = new BundleJavaFileObject(
-					resource.toURI(), className);
+			if (javaFileObject == null) {
+				_log.log(
+					"\tCould not create JavaFileObject for {" + resourceURL +
+						"}");
 
-				_log.log("\t" + javaFileObject);
-
-				javaFileObjects.add(javaFileObject);
+				continue;
 			}
-			catch (URISyntaxException e) {
-				// Can't really happen
-			}
+
+			_log.log("\t" + javaFileObject);
+
+			javaFileObjects.add(javaFileObject);
 		}
 	}
 
