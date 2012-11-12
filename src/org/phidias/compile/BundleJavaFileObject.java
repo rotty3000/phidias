@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2012 Raymond Augé All rights reserved.
+ * Copyright (c) 2012 Liferay Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the Apache License, Version 2.0 as published by the The Apache
