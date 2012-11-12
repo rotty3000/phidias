@@ -39,6 +39,12 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 		return toUri().toURL().openStream();
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName().concat("[").concat(
+			toUri().toString()).concat("]");
+	}
+
 	private String _className;
 
 }
