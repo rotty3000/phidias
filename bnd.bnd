@@ -3,5 +3,5 @@ Bundle-SymbolicName: org.phidias.compile
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: org.phidias.compile.*
 Import-Package: *
-Include-Resource: classes
+Include-Resource: classes, META-INF/LICENSE.txt=LICENSE.txt
 Private-Package: *
