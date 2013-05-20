@@ -1,6 +1,6 @@
  <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.phidias.compile</groupId>
+  <groupId>com.github.rotty3000</groupId>
   <artifactId>phidias</artifactId>
   <packaging>jar</packaging>
   <name>Phidias</name>
