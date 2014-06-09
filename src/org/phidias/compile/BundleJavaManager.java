@@ -125,6 +125,22 @@ public class BundleJavaManager
 		}
 	}
 
+	public void addBundleRequirement(BundleRequirement bundleRequirement) {
+		if (_packageRequirements.contains(bundleRequirement)) {
+			return;
+		}
+
+		_packageRequirements.add(bundleRequirement);
+	}
+
+	public void addBundleWiring(BundleWiring bundleWiring) {
+		if (_bundleWirings.contains(bundleWiring)) {
+			return;
+		}
+
+		_bundleWirings.add(bundleWiring);
+	}
+
 	public ClassLoader getClassLoader() {
 		return _classLoader;
 	}
