@@ -24,7 +24,6 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,8 +35,6 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -290,34 +287,6 @@ public class BundleJavaManager
 		return _resourceResolver;
 	}
 
-	private boolean hasPackageRequirement(
-		List<BundleRequirement> requirements, String packageName) {
-
-		Map<String,String> attributes = new HashMap<String,String>();
-
-		attributes.put(BundleRevision.PACKAGE_NAMESPACE, packageName);
-
-		for (BundleRequirement requirement : requirements) {
-			Map<String, String> directives = requirement.getDirectives();
-
-			String filterSpec = directives.get(FILTER);
-
-			try {
-				if ((filterSpec != null) &&
-					FrameworkUtil.createFilter(filterSpec).matches(
-						attributes)) {
-
-					return true;
-				}
-			}
-			catch (InvalidSyntaxException e) {
-				// Won't happen
-			}
-		}
-
-		return false;
-	}
-
 	private boolean hasPackageCapability(String packageName) {
 		if (!_strict) {
 			return true;
@@ -392,9 +361,7 @@ public class BundleJavaManager
 		int options = recurse ? BundleWiring.LISTRESOURCES_RECURSE : 0;
 
 		for (Kind kind : kinds) {
-			if (kind.equals(Kind.CLASS) &&
-				hasPackageRequirement(_packageRequirements, packageName)) {
-
+			if (kind.equals(Kind.CLASS)) {
 				for (BundleWiring bundleWiring : _bundleWirings) {
 					list(
 						packagePath, kind, options, bundleWiring,
