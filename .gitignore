@@ -1,7 +1,4 @@
-*.class
-*.ear
-*.jar
-*.war
-
+/classes
+/dist
 /.settings
 /bin
