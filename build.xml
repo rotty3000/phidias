@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="org.phidias.compile" basedir="." default="jar">
-	<property name="project.dir" value="." />
-
 	<import file="build-common.xml" />
 
 	<target name="clean">
-		<delete dir="${project.dir}/classes" />
-		<delete dir="${project.dir}/test-classes" />
-		<delete dir="${project.dir}/dist" />
+		<delete dir="classes" />
+		<delete dir="test-classes" />
+		<delete dir="dist" />
 	</target>
 
 	<target name="compile">
