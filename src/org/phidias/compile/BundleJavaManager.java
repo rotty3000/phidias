@@ -47,8 +47,7 @@ public class BundleJavaManager
 	extends ForwardingJavaFileManager<JavaFileManager>
 	implements Constants {
 
-	public BundleJavaManager(
-			Bundle bundle, JavaFileManager javaFileManager)
+	public BundleJavaManager(Bundle bundle, JavaFileManager javaFileManager)
 		throws IOException {
 
 		this(bundle, javaFileManager, null, false);
@@ -81,7 +80,7 @@ public class BundleJavaManager
 			"Initializing compilation in OSGi for bundle " +
 				_bundle.getSymbolicName() + "-" + _bundle.getVersion());
 
-		_bundleWiring = (BundleWiring)_bundle.adapt(BundleWiring.class);
+		_bundleWiring = _bundle.adapt(BundleWiring.class);
 
 		_classLoader = _bundleWiring.getClassLoader();
 
@@ -203,9 +202,10 @@ public class BundleJavaManager
 			(location != StandardLocation.CLASS_PATH) ||
 			(javaFileObjects.isEmpty() && hasPackageCapability(packageName))) {
 
-			for (JavaFileObject javaFileObject : _javaFileManager.list(
-					location, packagePath, kinds, recurse)) {
+			Iterable<JavaFileObject> localJavaFileObjects =
+				_javaFileManager.list(location, packagePath, kinds, recurse);
 
+			for (JavaFileObject javaFileObject : localJavaFileObjects) {
 				if (location == StandardLocation.CLASS_PATH) {
 					_log.log("\t" + javaFileObject);
 				}
@@ -251,8 +251,7 @@ public class BundleJavaManager
 
 		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
 			try {
-				return new BundleJavaFileObject(
-					resourceURL.toURI(), className);
+				return new BundleJavaFileObject(resourceURL.toURI(), className);
 			}
 			catch (Exception e) {
 				_log.log(e);
@@ -297,7 +296,7 @@ public class BundleJavaManager
 		// classpath.
 
 		return (_systemBundleWiring != null) &&
-			 hasPackageCapability(_systemCapabilities, packageName);
+			hasPackageCapability(_systemCapabilities, packageName);
 	}
 
 	private boolean hasPackageCapability(
@@ -320,14 +319,13 @@ public class BundleJavaManager
 	}
 
 	private void list(
-		String packagePath, Kind kind, int options,
-		BundleWiring bundleWiring, List<JavaFileObject> javaFileObjects) {
+		String packagePath, Kind kind, int options, BundleWiring bundleWiring,
+		List<JavaFileObject> javaFileObjects) {
 
 		ResourceResolver resourceResolver = getResourceResolver();
 
 		Collection<String> resources = resourceResolver.resolveResources(
-			bundleWiring, packagePath, STAR.concat(kind.extension),
-			options);
+			bundleWiring, packagePath, STAR.concat(kind.extension), options);
 
 		if ((resources == null) || resources.isEmpty()) {
 			return;
@@ -371,8 +369,7 @@ public class BundleJavaManager
 
 			if (javaFileObjects.isEmpty()) {
 				list(
-					packagePath, kind, options, _bundleWiring,
-					javaFileObjects);
+					packagePath, kind, options, _bundleWiring, javaFileObjects);
 			}
 		}
 	}
