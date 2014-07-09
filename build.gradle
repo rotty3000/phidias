@@ -16,12 +16,12 @@ apply plugin: 'java'
 apply plugin: 'nexus'
 
 group = 'com.github.rotty3000'
-version = '0.3.0'
+version = '0.3.1'
 
 repositories {
 	mavenCentral()
 	maven {
-		url "http://oss.sonatype.org/content/repositories/snapshots/"
+		url 'https://oss.sonatype.org/content/repositories/snapshots'
 	}
 }
 
@@ -59,6 +59,7 @@ modifyPom {
 			developer {
 				id 'rotty3000'
 				name 'Raymond Augé'
+				email 'rotty3000@gmail.com'
 			}
 		}
 	}
