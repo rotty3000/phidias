@@ -1,21 +1,28 @@
 buildscript {
 	repositories {
-	    mavenCentral()
+		mavenCentral()
+		jcenter()
 	}
 
-    dependencies {
-        classpath 'org.dm.gradle:bundle:0.2'
-    }
+	dependencies {
+		classpath 'org.dm.gradle:bundle:0.2'
+		classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7'
+	}
 }
 
 apply plugin: 'bundle'
 apply plugin: 'eclipse'
 apply plugin: 'java'
+apply plugin: 'nexus'
 
+group = 'com.github.rotty3000'
 version = '0.3.0'
 
 repositories {
-    mavenCentral()
+	mavenCentral()
+	maven {
+		url "http://oss.sonatype.org/content/repositories/snapshots/"
+	}
 }
 
 dependencies {
@@ -23,5 +30,36 @@ dependencies {
 }
 
 bundle {
-    instruction '-include', 'bnd.bnd'
+	instruction '-include', 'bnd.bnd'
+}
+
+modifyPom {
+	project {
+		name 'Phidias Compiler Adaptor'
+		packaging 'jar'
+		description 'A small javax compiler adapter for OSGi environments.'
+		url 'https://github.com/rotty3000/phidias'
+		inceptionYear '2012'
+
+		scm {
+			url 'scm:https://github.com/rotty3000/phidias.git'
+			connection 'scm:https://github.com/rotty3000/phidias.git'
+			developerConnection 'scm:https://github.com/rotty3000/phidias.git'
+		}
+
+		licenses {
+			license {
+				name 'The Apache Software License, Version 2.0'
+				url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+				distribution 'repo'
+			}
+		}
+
+		developers {
+			developer {
+				id 'rotty3000'
+				name 'Raymond Augé'
+			}
+		}
+	}
 }
