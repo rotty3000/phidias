@@ -1,0 +1,27 @@
+buildscript {
+	repositories {
+	    mavenCentral()
+	}
+
+    dependencies {
+        classpath 'org.dm.gradle:bundle:0.2'
+    }
+}
+
+apply plugin: 'bundle'
+apply plugin: 'eclipse'
+apply plugin: 'java'
+
+version = '0.3.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile 'org.osgi:org.osgi.core:5.0.0'
+}
+
+bundle {
+    instruction '-include', 'bnd.bnd'
+}
