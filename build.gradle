@@ -20,9 +20,6 @@ version = "0.3.2-SNAPSHOT"
 
 repositories {
 	mavenCentral()
-	maven {
-		url 'https://oss.sonatype.org/content/repositories/snapshots'
-	}
 }
 
 dependencies {
@@ -35,7 +32,7 @@ bundle {
 
 modifyPom {
 	project {
-		name 'Phidias Compiler Adaptor'
+		name 'Phidias Compiler Adapter'
 		packaging 'jar'
 		description 'A small javax compiler adapter for OSGi environments.'
 		url 'https://github.com/rotty3000/phidias'
@@ -60,6 +57,11 @@ modifyPom {
 				id 'rotty3000'
 				name 'Raymond Augé'
 				email 'rotty3000@gmail.com'
+			}
+			developer {
+				id 'migue'
+				name 'Miguel Pastor'
+				email 'miguel.pastor@liferay.com'
 			}
 		}
 	}
