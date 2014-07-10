@@ -1,5 +1,6 @@
 buildscript {
 	repositories {
+		mavenLocal()
 		mavenCentral()
 		jcenter()
 	}
@@ -19,6 +20,7 @@ group = 'com.github.rotty3000'
 version = "0.3.2-SNAPSHOT"
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
