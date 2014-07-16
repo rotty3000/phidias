@@ -3,7 +3,7 @@ phidias
 
 Provide OSGi aware runtime compilation support to javax.tools
 
-[License](/rotty3000/phidias/blob/master/LICENSE.txt)
+[License](/rotty3000/phidias/blob/master/src/main/resources/LICENSE.txt)
 
 Here is a simple example executing compilation:
 
