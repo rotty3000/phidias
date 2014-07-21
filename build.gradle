@@ -1,7 +1,3 @@
-task wrapper(type: Wrapper) {
-	gradleVersion = '2.0'
-}
-
 buildscript {
 	repositories {
 		mavenLocal()
@@ -10,17 +6,18 @@ buildscript {
 	}
 
 	dependencies {
+		classpath 'org.dm.gradle:bundle:0.3'
 		classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7'
 	}
 }
 
+apply plugin: 'bundle'
 apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'nexus'
-apply plugin: 'osgi'
 
 group = 'com.github.rotty3000'
-version = "0.3.2"
+version = "0.3.3.b1-SNAPSHOT"
 
 ext.sourceCompatibility = '1.6'
 ext.targetCompatibility = '1.6'
@@ -34,14 +31,8 @@ dependencies {
 	compile 'org.osgi:org.osgi.core:5.0.0'
 }
 
-jar {
-    manifest {
-		instruction 'Bundle-SymbolicName', 'org.phidias.compile'
-		instruction 'Bundle-RequiredExecutionEnvironment', 'JavaSE-1.6'
-		instruction 'Export-Package', 'org.phidias.compile'
-		instruction 'Import-Package', '*'
-		instruction '-includeresource', 'build/classes/main,META-INF/LICENSE.txt=LICENSE.txt'
-    }
+bundle {
+	instruction '-include', 'bnd.bnd'
 }
 
 modifyPom {
