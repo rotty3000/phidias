@@ -19,9 +19,6 @@ apply plugin: 'nexus'
 group = 'com.github.rotty3000'
 version = '0.3.4'
 
-ext.sourceCompatibility = '1.6'
-ext.targetCompatibility = '1.6'
-
 repositories {
 	mavenLocal()
 	mavenCentral()
