@@ -1,5 +1,3 @@
 Bundle-Name: Phidias
 Bundle-SymbolicName: org.phidias.compile
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: org.phidias.compile
-Import-Package: *
