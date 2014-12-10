@@ -6,6 +6,7 @@ buildscript {
 	}
 
 	dependencies {
+		classpath 'biz.aQute.bnd:bndlib:2.4.0'
 		classpath 'org.dm.gradle:gradle-bundle-plugin:0.6.1'
 		classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
 	}
@@ -24,8 +25,76 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	baseline
+}
+
 dependencies {
 	compile 'org.osgi:org.osgi.core:5.0.0'
+	baseline('com.github.rotty3000:phidias:latest.release') {
+		transitive false
+		force true
+	}
+}
+
+def baseline() {
+	def bnd = new aQute.bnd.osgi.Processor();
+
+	def newer = new aQute.bnd.osgi.Jar(jar.archivePath)
+	def older = new aQute.bnd.osgi.Jar(configurations.baseline.singleFile)
+
+	def baseline = new aQute.bnd.differ.Baseline(
+		bnd, new aQute.bnd.differ.DiffPluginImpl())
+
+	def infos = baseline.baseline(newer, older, null)
+	def bundleInfo = baseline.getBundleInfo()
+
+	def sorted = infos.toArray(new aQute.bnd.differ.Baseline.Info[infos.size()])
+
+	Arrays.sort(
+		sorted,
+		new java.util.Comparator<aQute.bnd.differ.Baseline.Info>() {
+
+			public int compare(
+				aQute.bnd.differ.Baseline.Info o1,
+				aQute.bnd.differ.Baseline.Info o2) {
+
+				return o1.packageName.compareTo(o2.packageName)
+			}
+
+		});
+
+	bnd.out.println "==============================================================="
+	bnd.out.printf(
+		"%s %s %s-%s", bundleInfo.mismatch ? '*' : ' ', bundleInfo.bsn,
+		newer.getVersion(), older.getVersion())
+
+	if (bundleInfo.mismatch && bundleInfo.suggestedVersion != null) {
+		bnd.out.printf(" suggests %s", bundleInfo.suggestedVersion)
+	}
+
+	bnd.out.println ""
+	bnd.out.println "==============================================================="
+
+	bnd.out.printf(
+		"  %-50s %-10s %-10s %-10s %-10s %-10s%n", "Package", "Delta", "New",
+		"Old", "Suggest", "If Prov.");
+
+	sorted.each { info ->
+		bnd.out.printf(
+			"%s %-50s %-10s %-10s %-10s %-10s %-10s%n",
+			info.mismatch ? '*' : ' ',
+			info.packageName,
+			info.packageDiff.getDelta(),
+			info.newerVersion,
+			info.olderVersion != null && info.olderVersion.equals(aQute.bnd.version.Version.LOWEST) ? "-": info.olderVersion,
+			info.suggestedVersion != null && info.suggestedVersion.compareTo(info.newerVersion) <= 0 ? "ok" : info.suggestedVersion,
+			info.suggestedIfProviders == null ? "-" : info.suggestedIfProviders)
+	}
+}
+
+assemble.doLast {
+	baseline()
 }
 
 bundle {
