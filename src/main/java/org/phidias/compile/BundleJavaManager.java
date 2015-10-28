@@ -16,6 +16,7 @@
 
 package org.phidias.compile;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.net.JarURLConnection;
@@ -186,8 +187,7 @@ public class BundleJavaManager
 		if (!packageName.startsWith(JAVA_PACKAGE) &&
 			(location == StandardLocation.CLASS_PATH)) {
 
-			listFromDependencies(
-				packageName, kinds, recurse, packagePath, javaFileObjects);
+			listFromDependencies(kinds, recurse, packagePath, javaFileObjects);
 		}
 
 		// When not in strict mode, the following ensures that if a standard
@@ -221,37 +221,16 @@ public class BundleJavaManager
 		_resourceResolver = resourceResolver;
 	}
 
-	private String getClassNameFromPath(URL resource, String packageName) {
-		String className = resource.getPath();
-
-		if (resource.getProtocol().equals("jar")) {
-			int pos = className.indexOf("!");
-
-			className = className.substring(pos + 1);
-		}
-
-		int x = className.indexOf(packageName);
-		int y = className.indexOf('.');
-
-		className = className.substring(x, y).replace('/', '.');
-
-		if (className.startsWith(PERIOD)) {
-			className = className.substring(1);
-		}
-
-		return className;
+	private String getClassNameFromPath(String resourceName) {
+		return resourceName.replace(".class", "").replace("/", ".");
 	}
 
-	private JavaFileObject getJavaFileObject(
-		URL resourceURL, String packagePath) {
-
-		String protocol = resourceURL.getProtocol();
-
-		String className = getClassNameFromPath(resourceURL, packagePath);
+	private URI getURI(URL url) {
+		String protocol = url.getProtocol();
 
 		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
 			try {
-				return new BundleJavaFileObject(resourceURL.toURI(), className);
+				return url.toURI();
 			}
 			catch (Exception e) {
 				_log.log(e);
@@ -260,15 +239,58 @@ public class BundleJavaManager
 		else if (protocol.equals("jar")) {
 			try {
 				JarURLConnection jarUrlConnection =
-					(JarURLConnection)resourceURL.openConnection();
+					(JarURLConnection)url.openConnection();
 
-				URI uri = jarUrlConnection.getJarFileURL().toURI();
-				String entryName = jarUrlConnection.getEntryName();
-
-				return new JarJavaFileObject(
-					uri, className, resourceURL, entryName);
+				return jarUrlConnection.getJarFileURL().toURI();
 			}
 			catch (Exception e) {
+				_log.log(e);
+			}
+		}
+		else if (protocol.equals("vfs")) {
+			String file = url.getFile();
+
+			int indexOf = file.indexOf(".jar") + 4;
+
+			file =
+				file.substring(0, indexOf) + "!" +
+					url.getFile().substring(indexOf, url.getFile().length());
+
+			return new File(file).toURI();
+		}
+
+		return null;
+	}
+
+	private JavaFileObject getJavaFileObject(
+		URL resourceURL, String resourceName) {
+
+		String protocol = resourceURL.getProtocol();
+
+		String className = getClassNameFromPath(resourceName);
+
+		URI uri = getURI(resourceURL);
+
+		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
+			try {
+				return new BundleJavaFileObject(uri, className);
+			}
+			catch (Exception e) {
+				_log.log(e);
+			}
+		}
+		else if (protocol.equals("jar")) {
+			return new JarJavaFileObject(
+				uri, className, resourceURL, resourceName);
+		}
+		else if (protocol.equals("vfs")) {
+			try {
+				return new JarJavaFileObject(
+					uri, className,
+					new URL("jar:" + uri.toString()),
+					resourceName);
+			}
+			catch (IOException e) {
 				_log.log(e);
 			}
 		}
@@ -336,7 +358,7 @@ public class BundleJavaManager
 				bundleWiring, resourceName);
 
 			JavaFileObject javaFileObject = getJavaFileObject(
-				resourceURL, packagePath);
+				resourceURL, resourceName);
 
 			if (javaFileObject == null) {
 				_log.log(
@@ -353,7 +375,7 @@ public class BundleJavaManager
 	}
 
 	private void listFromDependencies(
-		String packageName, Set<Kind> kinds, boolean recurse,
+		Set<Kind> kinds, boolean recurse,
 		String packagePath, List<JavaFileObject> javaFileObjects) {
 
 		int options = recurse ? BundleWiring.LISTRESOURCES_RECURSE : 0;
