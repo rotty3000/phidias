@@ -222,7 +222,12 @@ public class BundleJavaManager
 	}
 
 	private String getClassNameFromPath(String resourceName) {
-		return resourceName.replace(".class", "").replace("/", ".");
+		if (resourceName.endsWith(".class")) {
+			resourceName = resourceName.substring(
+				0, resourceName.length() - ".class".length());
+		}
+
+		return resourceName.replace('/', '.');
 	}
 
 	private URI getURI(URL url) {
