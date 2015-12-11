@@ -34,16 +34,15 @@ public class JarJavaFileObject extends BundleJavaFileObject {
 	public JarJavaFileObject(
 		URI uri, String className, URL resourceURL, String entryName) {
 
-		super(uri, className);
+		super(uri, className, resourceURL);
 
-		_resourceURL = resourceURL;
 		_entryName = entryName;
 	}
 
 	@Override
 	public InputStream openInputStream() throws IOException {
 		JarURLConnection jarUrlConnection =
-			(JarURLConnection)_resourceURL.openConnection();
+			(JarURLConnection)url.openConnection();
 
 		JarFile jarFile = jarUrlConnection.getJarFile();
 
@@ -55,10 +54,9 @@ public class JarJavaFileObject extends BundleJavaFileObject {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName().concat("[").concat(
-			_resourceURL.toString()).concat("]");
+			url.toString()).concat("]");
 	}
 
 	private String _entryName;
-	private URL _resourceURL;
 
 }
