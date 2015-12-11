@@ -258,7 +258,7 @@ public class BundleJavaManager
 
 			file =
 				file.substring(0, indexOf) + "!" +
-					url.getFile().substring(indexOf, url.getFile().length());
+					file.substring(indexOf, file.length());
 
 			return new File(file).toURI();
 		}
