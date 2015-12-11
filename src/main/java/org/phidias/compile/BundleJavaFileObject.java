@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.URI;
+import java.net.URL;
 
 import javax.tools.SimpleJavaFileObject;
 
@@ -28,10 +29,11 @@ import javax.tools.SimpleJavaFileObject;
  */
 public class BundleJavaFileObject extends SimpleJavaFileObject {
 
-	public BundleJavaFileObject(URI uri, String className) {
+	public BundleJavaFileObject(URI uri, String className, URL url) {
 		super(uri, Kind.CLASS);
 
 		_className = className;
+		this.url = url;
 	}
 
 	public String inferBinaryName() {
@@ -40,7 +42,7 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 
 	@Override
 	public InputStream openInputStream() throws IOException {
-		return toUri().toURL().openStream();
+		return url.openStream();
 	}
 
 	@Override
@@ -49,6 +51,7 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 			toUri().toString()).concat("]");
 	}
 
+	protected URL url;
 	private String _className;
 
 }
