@@ -229,12 +229,18 @@ public class BundleJavaManager
 		return resourceName.replace('/', '.');
 	}
 
-	private URI getURI(URL url) {
-		String protocol = url.getProtocol();
+	private JavaFileObject getJavaFileObject(
+		URL resourceURL, String resourceName) {
+
+		String protocol = resourceURL.getProtocol();
+
+		String className = getClassNameFromPath(resourceName);
+
+		URI uri = null;
 
 		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
 			try {
-				return url.toURI();
+				uri = resourceURL.toURI();
 			}
 			catch (Exception e) {
 				_log.log(e);
@@ -243,16 +249,16 @@ public class BundleJavaManager
 		else if (protocol.equals("jar")) {
 			try {
 				JarURLConnection jarUrlConnection =
-					(JarURLConnection)url.openConnection();
+					(JarURLConnection)resourceURL.openConnection();
 
-				return jarUrlConnection.getJarFileURL().toURI();
+				uri = jarUrlConnection.getJarFileURL().toURI();
 			}
 			catch (Exception e) {
 				_log.log(e);
 			}
 		}
 		else if (protocol.equals("vfs")) {
-			String file = url.getFile();
+			String file = resourceURL.getFile();
 
 			int indexOf = file.indexOf(".jar") + 4;
 
@@ -260,20 +266,8 @@ public class BundleJavaManager
 				file.substring(0, indexOf) + "!" +
 					file.substring(indexOf, file.length());
 
-			return new File(file).toURI();
+			uri = new File(file).toURI();
 		}
-
-		return null;
-	}
-
-	private JavaFileObject getJavaFileObject(
-		URL resourceURL, String resourceName) {
-
-		String protocol = resourceURL.getProtocol();
-
-		String className = getClassNameFromPath(resourceName);
-
-		URI uri = getURI(resourceURL);
 
 		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
 			try {
