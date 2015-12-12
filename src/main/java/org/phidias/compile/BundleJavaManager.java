@@ -112,6 +112,22 @@ public class BundleJavaManager
 
 			if (_strict && (curBundle.getBundleId() == 0)) {
 				_systemBundleWiring = providerWiring;
+
+				List<BundleCapability> bundleCapabilities =
+					_systemBundleWiring.getCapabilities(
+						BundleRevision.PACKAGE_NAMESPACE);
+
+				for (BundleCapability bundleCapability : bundleCapabilities) {
+					Map<String, Object> attributes =
+						bundleCapability.getAttributes();
+
+					Object packageNamespace = attributes.get(
+						BundleRevision.PACKAGE_NAMESPACE);
+
+					if (packageNamespace != null) {
+						_systemCapabilities.add(packageNamespace);
+					}
+				}
 			}
 
 			if (_log.isEnabled()) {
@@ -121,24 +137,6 @@ public class BundleJavaManager
 			}
 
 			_bundleWirings.add(providerWiring);
-		}
-
-		if (_strict && (_systemBundleWiring != null)) {
-			List<BundleCapability> bundleCapabilities =
-				_systemBundleWiring.getCapabilities(
-					BundleRevision.PACKAGE_NAMESPACE);
-
-			for (BundleCapability bundleCapability : bundleCapabilities) {
-				Map<String, Object> attributes =
-					bundleCapability.getAttributes();
-
-				Object packageNamespace = attributes.get(
-					BundleRevision.PACKAGE_NAMESPACE);
-
-				if (packageNamespace != null) {
-					_systemCapabilities.add(packageNamespace);
-				}
-			}
 		}
 	}
 
