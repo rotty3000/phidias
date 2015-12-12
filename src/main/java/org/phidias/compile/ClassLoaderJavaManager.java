@@ -125,7 +125,9 @@ public class ClassLoaderJavaManager
 			BundleJavaFileObject bundleJavaFileObject =
 				(BundleJavaFileObject)file;
 
-			_log.log("Infering binary name from " + bundleJavaFileObject);
+			if (_log.isEnabled()) {
+				_log.log("Infering binary name from " + bundleJavaFileObject);
+			}
 
 			return bundleJavaFileObject.inferBinaryName();
 		}
@@ -141,7 +143,7 @@ public class ClassLoaderJavaManager
 
 		List<JavaFileObject> javaFileObjects = new ArrayList<JavaFileObject>();
 
-		if (location == StandardLocation.CLASS_PATH) {
+		if ((location == StandardLocation.CLASS_PATH) && _log.isEnabled()) {
 			_log.log(
 				"List available sources for {location=" + location +
 					", packageName=" + packageName + ", kinds=" + kinds +
@@ -172,7 +174,9 @@ public class ClassLoaderJavaManager
 			for (JavaFileObject javaFileObject : _javaFileManager.list(
 					location, packagePath, kinds, recurse)) {
 
-				if (location == StandardLocation.CLASS_PATH) {
+				if ((location == StandardLocation.CLASS_PATH) &&
+						_log.isEnabled()) {
+
 					_log.log("\t" + javaFileObject);
 				}
 
