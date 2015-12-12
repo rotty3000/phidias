@@ -70,7 +70,6 @@ public class BundleJavaManager
 
 		super(javaFileManager);
 
-		_bundle = bundle;
 		_javaFileManager = javaFileManager;
 		_log = new TPhLog();
 
@@ -83,10 +82,10 @@ public class BundleJavaManager
 		if (_log.isEnabled()) {
 			_log.log(
 				"Initializing compilation in OSGi for bundle " +
-					_bundle.getSymbolicName() + "-" + _bundle.getVersion());
+					bundle.getSymbolicName() + "-" + bundle.getVersion());
 		}
 
-		_bundleWiring = _bundle.adapt(BundleWiring.class);
+		_bundleWiring = bundle.adapt(BundleWiring.class);
 
 		_classLoader = _bundleWiring.getClassLoader();
 
@@ -396,7 +395,6 @@ public class BundleJavaManager
 		}
 	}
 
-	private Bundle _bundle;
 	private BundleWiring _bundleWiring;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
