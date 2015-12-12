@@ -38,7 +38,6 @@ import javax.tools.StandardLocation;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
@@ -89,9 +88,6 @@ public class BundleJavaManager
 
 		_classLoader = _bundleWiring.getClassLoader();
 
-		_packageRequirements = _bundleWiring.getRequirements(
-			BundleRevision.PACKAGE_NAMESPACE);
-
 		List<BundleWire> providedWires = _bundleWiring.getRequiredWires(null);
 
 		if (_log.isEnabled()) {
@@ -137,14 +133,6 @@ public class BundleJavaManager
 
 			_bundleWirings.add(providerWiring);
 		}
-	}
-
-	public void addBundleRequirement(BundleRequirement bundleRequirement) {
-		if (_packageRequirements.contains(bundleRequirement)) {
-			return;
-		}
-
-		_packageRequirements.add(bundleRequirement);
 	}
 
 	public void addBundleWiring(BundleWiring bundleWiring) {
@@ -400,7 +388,6 @@ public class BundleJavaManager
 	private ClassLoader _classLoader;
 	private JavaFileManager _javaFileManager;
 	private TPhLog _log;
-	private List<BundleRequirement> _packageRequirements;
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
 	private final Set<Object> _systemCapabilities = new HashSet<Object>();
