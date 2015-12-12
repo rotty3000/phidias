@@ -111,10 +111,8 @@ public class BundleJavaManager
 			Bundle curBundle = providerWiring.getBundle();
 
 			if (_strict && (curBundle.getBundleId() == 0)) {
-				_systemBundleWiring = providerWiring;
-
 				List<BundleCapability> bundleCapabilities =
-					_systemBundleWiring.getCapabilities(
+					providerWiring.getCapabilities(
 						BundleRevision.PACKAGE_NAMESPACE);
 
 				for (BundleCapability bundleCapability : bundleCapabilities) {
@@ -418,7 +416,6 @@ public class BundleJavaManager
 	private List<BundleRequirement> _packageRequirements;
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
-	private BundleWiring _systemBundleWiring;
 	private final Set<Object> _systemCapabilities = new HashSet<Object>();
 
 }
