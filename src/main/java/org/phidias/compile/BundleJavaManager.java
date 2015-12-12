@@ -74,7 +74,9 @@ public class BundleJavaManager
 		_javaFileManager = javaFileManager;
 		_log = new TPhLog();
 
-		setOptions(options);
+		if ((options != null) && options.contains(OPT_VERBOSE)) {
+			_log.out = System.err;
+		}
 
 		_strict = strict;
 
@@ -394,25 +396,12 @@ public class BundleJavaManager
 		}
 	}
 
-	private void setOptions(List<String> options) {
-		if (options == null) {
-			return;
-		}
-
-		_options.addAll(options);
-
-		if (_options.contains(OPT_VERBOSE)) {
-			_log.out = System.err;
-		}
-	}
-
 	private Bundle _bundle;
 	private BundleWiring _bundleWiring;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
 	private JavaFileManager _javaFileManager;
 	private TPhLog _log;
-	private List<String> _options = new ArrayList<String>();
 	private List<BundleRequirement> _packageRequirements;
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
