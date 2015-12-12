@@ -134,7 +134,9 @@ public class BundleJavaManager
 				Object packageAttribute = attributes.get(
 					BundleRevision.PACKAGE_NAMESPACE);
 
-				_systemCapabilities.add(packageAttribute);
+				if (packageAttribute != null) {
+					_systemCapabilities.add(packageAttribute);
+				}
 			}
 		}
 	}
