@@ -124,18 +124,19 @@ public class BundleJavaManager
 		}
 
 		if (_strict && (_systemBundleWiring != null)) {
-			List<BundleCapability> capabilities =
+			List<BundleCapability> bundleCapabilities =
 				_systemBundleWiring.getCapabilities(
 					BundleRevision.PACKAGE_NAMESPACE);
 
-			for (BundleCapability capability : capabilities) {
-				Map<String, Object> attributes = capability.getAttributes();
+			for (BundleCapability bundleCapability : bundleCapabilities) {
+				Map<String, Object> attributes =
+					bundleCapability.getAttributes();
 
-				Object packageAttribute = attributes.get(
+				Object packageNamespace = attributes.get(
 					BundleRevision.PACKAGE_NAMESPACE);
 
-				if (packageAttribute != null) {
-					_systemCapabilities.add(packageAttribute);
+				if (packageNamespace != null) {
+					_systemCapabilities.add(packageNamespace);
 				}
 			}
 		}
