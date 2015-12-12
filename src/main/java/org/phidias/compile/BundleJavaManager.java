@@ -25,6 +25,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -123,8 +124,18 @@ public class BundleJavaManager
 		}
 
 		if (_strict && (_systemBundleWiring != null)) {
-			_systemCapabilities = _systemBundleWiring.getCapabilities(
-				BundleRevision.PACKAGE_NAMESPACE);
+			List<BundleCapability> capabilities =
+				_systemBundleWiring.getCapabilities(
+					BundleRevision.PACKAGE_NAMESPACE);
+
+			for (BundleCapability capability : capabilities) {
+				Map<String, Object> attributes = capability.getAttributes();
+
+				Object packageAttribute = attributes.get(
+					BundleRevision.PACKAGE_NAMESPACE);
+
+				_systemCapabilities.add(packageAttribute);
+			}
 		}
 	}
 
@@ -321,27 +332,7 @@ public class BundleJavaManager
 		// if mode is strict. Otherwise, allow loading classes from the defined
 		// classpath.
 
-		return (_systemBundleWiring != null) &&
-			hasPackageCapability(_systemCapabilities, packageName);
-	}
-
-	private boolean hasPackageCapability(
-		List<BundleCapability> capabilities, String packageName) {
-
-		for (BundleCapability capability : capabilities) {
-			Map<String, Object> attributes = capability.getAttributes();
-
-			Object packageAttribute = attributes.get(
-				BundleRevision.PACKAGE_NAMESPACE);
-
-			if ((packageAttribute != null) &&
-				packageAttribute.equals(packageName)) {
-
-				return true;
-			}
-		}
-
-		return false;
+		return _systemCapabilities.contains(packageName);
 	}
 
 	private void list(
@@ -427,6 +418,6 @@ public class BundleJavaManager
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
 	private BundleWiring _systemBundleWiring;
-	private List<BundleCapability> _systemCapabilities;
+	private final Set<Object> _systemCapabilities = new HashSet<Object>();
 
 }
