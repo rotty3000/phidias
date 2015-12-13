@@ -30,6 +30,10 @@ public class TPhLog {
 	public PrintStream out;
 	public String pattern = "%1$tH:%1$tM:%1$tS,%1$tL [%2$s:%3$d] %4$s %5$s\n";
 
+	public boolean isEnabled() {
+		return out != null;
+	}
+
 	public void log(Object... input) {
 		if (out == null) {
 			return;
