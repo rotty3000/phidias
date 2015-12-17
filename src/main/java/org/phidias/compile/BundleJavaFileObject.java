@@ -34,11 +34,30 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 
 		_className = className;
 		this.url = url;
+
+		int index = className.lastIndexOf('.');
+
+		if (index >= 0) {
+			_simpleName = className.substring(index + 1);
+		}
+		else {
+			_simpleName = className;
+		}
 	}
 
 	public String inferBinaryName() {
 		return _className;
 	}
+
+	@Override
+	public boolean isNameCompatible(String simpleName, Kind kind) {
+		if ((kind == Kind.CLASS) && _simpleName.equals(simpleName)) {
+			return true;
+		}
+
+		return false;
+	}
+
 
 	@Override
 	public InputStream openInputStream() throws IOException {
@@ -53,5 +72,6 @@ public class BundleJavaFileObject extends SimpleJavaFileObject {
 
 	protected URL url;
 	private String _className;
+	private String _simpleName;
 
 }
