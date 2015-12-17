@@ -25,6 +25,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,7 +38,6 @@ import javax.tools.StandardLocation;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
@@ -69,30 +69,32 @@ public class BundleJavaManager
 
 		super(javaFileManager);
 
-		_bundle = bundle;
 		_javaFileManager = javaFileManager;
 		_log = new TPhLog();
 
-		setOptions(options);
+		if ((options != null) && options.contains(OPT_VERBOSE)) {
+			_log.out = System.err;
+		}
 
 		_strict = strict;
 
-		_log.log(
-			"Initializing compilation in OSGi for bundle " +
-				_bundle.getSymbolicName() + "-" + _bundle.getVersion());
+		if (_log.isEnabled()) {
+			_log.log(
+				"Initializing compilation in OSGi for bundle " +
+					bundle.getSymbolicName() + "-" + bundle.getVersion());
+		}
 
-		_bundleWiring = _bundle.adapt(BundleWiring.class);
+		_bundleWiring = bundle.adapt(BundleWiring.class);
 
 		_classLoader = _bundleWiring.getClassLoader();
 
-		_packageRequirements = _bundleWiring.getRequirements(
-			BundleRevision.PACKAGE_NAMESPACE);
-
 		List<BundleWire> providedWires = _bundleWiring.getRequiredWires(null);
 
-		_log.log(
-			"Dependent BundleWirings included in this BundleJavaManager " +
-				"context: ");
+		if (_log.isEnabled()) {
+			_log.log(
+				"Dependent BundleWirings included in this BundleJavaManager " +
+					"context: ");
+		}
 
 		_bundleWirings = new ArrayList<BundleWiring>();
 
@@ -106,28 +108,31 @@ public class BundleJavaManager
 			Bundle curBundle = providerWiring.getBundle();
 
 			if (_strict && (curBundle.getBundleId() == 0)) {
-				_systemBundleWiring = providerWiring;
+				List<BundleCapability> bundleCapabilities =
+					providerWiring.getCapabilities(
+						BundleRevision.PACKAGE_NAMESPACE);
+
+				for (BundleCapability bundleCapability : bundleCapabilities) {
+					Map<String, Object> attributes =
+						bundleCapability.getAttributes();
+
+					Object packageNamespace = attributes.get(
+						BundleRevision.PACKAGE_NAMESPACE);
+
+					if (packageNamespace != null) {
+						_systemCapabilities.add(packageNamespace);
+					}
+				}
 			}
 
-			_log.log(
-				"\t" + curBundle.getSymbolicName() + "-" +
-					curBundle.getVersion());
+			if (_log.isEnabled()) {
+				_log.log(
+					"\t" + curBundle.getSymbolicName() + "-" +
+						curBundle.getVersion());
+			}
 
 			_bundleWirings.add(providerWiring);
 		}
-
-		if (_strict && (_systemBundleWiring != null)) {
-			_systemCapabilities = _systemBundleWiring.getCapabilities(
-				BundleRevision.PACKAGE_NAMESPACE);
-		}
-	}
-
-	public void addBundleRequirement(BundleRequirement bundleRequirement) {
-		if (_packageRequirements.contains(bundleRequirement)) {
-			return;
-		}
-
-		_packageRequirements.add(bundleRequirement);
 	}
 
 	public void addBundleWiring(BundleWiring bundleWiring) {
@@ -159,7 +164,9 @@ public class BundleJavaManager
 			BundleJavaFileObject bundleJavaFileObject =
 				(BundleJavaFileObject)file;
 
-			_log.log("Infering binary name from " + bundleJavaFileObject);
+			if (_log.isEnabled()) {
+				_log.log("Infering binary name from " + bundleJavaFileObject);
+			}
 
 			return bundleJavaFileObject.inferBinaryName();
 		}
@@ -175,7 +182,7 @@ public class BundleJavaManager
 
 		List<JavaFileObject> javaFileObjects = new ArrayList<JavaFileObject>();
 
-		if (location == StandardLocation.CLASS_PATH) {
+		if ((location == StandardLocation.CLASS_PATH) && _log.isEnabled()) {
 			_log.log(
 				"List available sources for {location=" + location +
 					", packageName=" + packageName + ", kinds=" + kinds +
@@ -206,7 +213,9 @@ public class BundleJavaManager
 				_javaFileManager.list(location, packagePath, kinds, recurse);
 
 			for (JavaFileObject javaFileObject : localJavaFileObjects) {
-				if (location == StandardLocation.CLASS_PATH) {
+				if ((location == StandardLocation.CLASS_PATH) &&
+						_log.isEnabled()) {
+
 					_log.log("\t" + javaFileObject);
 				}
 
@@ -229,43 +238,6 @@ public class BundleJavaManager
 		return resourceName.replace('/', '.');
 	}
 
-	private URI getURI(URL url) {
-		String protocol = url.getProtocol();
-
-		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
-			try {
-				return url.toURI();
-			}
-			catch (Exception e) {
-				_log.log(e);
-			}
-		}
-		else if (protocol.equals("jar")) {
-			try {
-				JarURLConnection jarUrlConnection =
-					(JarURLConnection)url.openConnection();
-
-				return jarUrlConnection.getJarFileURL().toURI();
-			}
-			catch (Exception e) {
-				_log.log(e);
-			}
-		}
-		else if (protocol.equals("vfs")) {
-			String file = url.getFile();
-
-			int indexOf = file.indexOf(".jar") + 4;
-
-			file =
-				file.substring(0, indexOf) + "!" +
-					url.getFile().substring(indexOf, url.getFile().length());
-
-			return new File(file).toURI();
-		}
-
-		return null;
-	}
-
 	private JavaFileObject getJavaFileObject(
 		URL resourceURL, String resourceName) {
 
@@ -273,29 +245,56 @@ public class BundleJavaManager
 
 		String className = getClassNameFromPath(resourceName);
 
-		URI uri = getURI(resourceURL);
-
 		if (protocol.equals("bundle") || protocol.equals("bundleresource")) {
 			try {
-				return new BundleJavaFileObject(uri, className);
+				return new BundleJavaFileObject(
+					resourceURL.toURI(), className, resourceURL);
 			}
 			catch (Exception e) {
-				_log.log(e);
+				if (_log.isEnabled()) {
+					_log.log(e);
+				}
 			}
 		}
 		else if (protocol.equals("jar")) {
-			return new JarJavaFileObject(
-				uri, className, resourceURL, resourceName);
+			try {
+				JarURLConnection jarUrlConnection =
+					(JarURLConnection)resourceURL.openConnection();
+
+				URL url = jarUrlConnection.getJarFileURL();
+
+				return new JarJavaFileObject(
+					url.toURI(), className, resourceURL, resourceName);
+			}
+			catch (Exception e) {
+				if (_log.isEnabled()) {
+					_log.log(e);
+				}
+			}
 		}
 		else if (protocol.equals("vfs")) {
 			try {
+				String filePath = resourceURL.getFile();
+
+				int indexOf = filePath.indexOf(".jar") + 4;
+
+				filePath =
+					filePath.substring(0, indexOf) + "!" +
+						filePath.substring(indexOf, filePath.length());
+
+				File file = new File(filePath);
+
+				URI uri = file.toURI();
+
 				return new JarJavaFileObject(
 					uri, className,
 					new URL("jar:" + uri.toString()),
 					resourceName);
 			}
 			catch (IOException e) {
-				_log.log(e);
+				if (_log.isEnabled()) {
+					_log.log(e);
+				}
 			}
 		}
 
@@ -321,27 +320,7 @@ public class BundleJavaManager
 		// if mode is strict. Otherwise, allow loading classes from the defined
 		// classpath.
 
-		return (_systemBundleWiring != null) &&
-			hasPackageCapability(_systemCapabilities, packageName);
-	}
-
-	private boolean hasPackageCapability(
-		List<BundleCapability> capabilities, String packageName) {
-
-		for (BundleCapability capability : capabilities) {
-			Map<String, Object> attributes = capability.getAttributes();
-
-			Object packageAttribute = attributes.get(
-				BundleRevision.PACKAGE_NAMESPACE);
-
-			if ((packageAttribute != null) &&
-				packageAttribute.equals(packageName)) {
-
-				return true;
-			}
-		}
-
-		return false;
+		return _systemCapabilities.contains(packageName);
 	}
 
 	private void list(
@@ -365,14 +344,18 @@ public class BundleJavaManager
 				resourceURL, resourceName);
 
 			if (javaFileObject == null) {
-				_log.log(
-					"\tCould not create JavaFileObject for {" + resourceURL +
-						"}");
+				if (_log.isEnabled()) {
+					_log.log(
+						"\tCould not create JavaFileObject for {" + resourceURL +
+							"}");
+				}
 
 				continue;
 			}
 
-			_log.log("\t" + javaFileObject);
+			if (_log.isEnabled()) {
+				_log.log("\t" + javaFileObject);
+			}
 
 			javaFileObjects.add(javaFileObject);
 		}
@@ -400,29 +383,13 @@ public class BundleJavaManager
 		}
 	}
 
-	private void setOptions(List<String> options) {
-		if (options == null) {
-			return;
-		}
-
-		_options.addAll(options);
-
-		if (_options.contains(OPT_VERBOSE)) {
-			_log.out = System.err;
-		}
-	}
-
-	private Bundle _bundle;
 	private BundleWiring _bundleWiring;
 	private ArrayList<BundleWiring> _bundleWirings;
 	private ClassLoader _classLoader;
 	private JavaFileManager _javaFileManager;
 	private TPhLog _log;
-	private List<String> _options = new ArrayList<String>();
-	private List<BundleRequirement> _packageRequirements;
 	private ResourceResolver _resourceResolver;
 	private boolean _strict;
-	private BundleWiring _systemBundleWiring;
-	private List<BundleCapability> _systemCapabilities;
+	private final Set<Object> _systemCapabilities = new HashSet<Object>();
 
 }
