@@ -139,7 +139,7 @@ public class BundleJavaManager
 	}
 
 	public ClassLoader getClassLoader() {
-		return _classLoader;
+		return new DelegatingClassLoader(_classLoader);
 	}
 
 	@Override
@@ -425,4 +425,12 @@ public class BundleJavaManager
 	private BundleWiring _systemBundleWiring;
 	private List<BundleCapability> _systemCapabilities;
 
+	private class DelegatingClassLoader extends ClassLoader {
+
+		public DelegatingClassLoader(ClassLoader parent) {
+			super(parent);
+		}
+		
+	}
+	
 }
